@@ -31,6 +31,13 @@ module AdminsHelper
     @running_room_bbb_ids.include?(id)
   end
 
+  # Returns a more friendly/readable date time object
+  def friendly_time(date)
+    return "" if date.nil? # Handle invalid dates
+
+    I18n.l date, format: "%B %d, %Y %H:%M UTC"
+  end
+
   # Site Settings
 
   def admin_invite_registration
@@ -48,6 +55,14 @@ module AdminsHelper
 
   def shared_access_string
     if @settings.get_value("Shared Access") == "true"
+      I18n.t("administrator.site_settings.authentication.enabled")
+    else
+      I18n.t("administrator.site_settings.authentication.disabled")
+    end
+  end
+
+  def preupload_string
+    if @settings.get_value("Preupload Presentation") == "true"
       I18n.t("administrator.site_settings.authentication.enabled")
     else
       I18n.t("administrator.site_settings.authentication.disabled")
@@ -73,6 +88,14 @@ module AdminsHelper
       end
   end
 
+  def require_consent_string
+    if @settings.get_value("Require Recording Consent") == "true"
+      I18n.t("administrator.site_settings.authentication.enabled")
+    else
+      I18n.t("administrator.site_settings.authentication.disabled")
+    end
+  end
+
   def log_level_string
     case Rails.logger.level
     when 0
@@ -90,8 +113,16 @@ module AdminsHelper
     end
   end
 
+  def show_log_dropdown
+    current_user.has_role?(:super_admin) || !Rails.configuration.loadbalanced_configuration
+  end
+
   def room_limit_number
     @settings.get_value("Room Limit").to_i
+  end
+
+  def email_mapping
+    @settings.get_value("Email Mapping")
   end
 
   # Room Configuration
@@ -110,6 +141,6 @@ module AdminsHelper
   # Roles
 
   def edit_disabled
-    @edit_disabled ||= @selected_role.priority <= current_user.highest_priority_role.priority
+    @edit_disabled ||= @selected_role.priority <= current_user.role.priority
   end
 end
